@@ -1,0 +1,11 @@
+{
+  "profiles": {
+    "TyporaUploaderAzure": {
+      "commandName": "Project",
+      "commandLineArgs": "\"C:\\Users\\chgeuer\\Documents\\2021-01-21--16-45-58.png\" \"C:\\Users\\chgeuer\\Documents\\2021-01-21--09-43-49.png\"",
+      "environmentVariables": {
+        "TYPORA_IMAGE_UPLOAD_AZURE_CONNECTION": "DefaultEndpointsProtocol=https;AccountName=typora;AccountKey=...;EndpointSuffix=core.windows.net"
+      }
+    }
+  }
+}
