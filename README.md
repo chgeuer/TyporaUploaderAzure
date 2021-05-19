@@ -5,6 +5,8 @@
 
 I'm a big fan of Typora, as it has a nice WYSIWYG experience. They also support [custom image uploads](https://support.typora.io/Upload-Image/) to a storage backend of your choice. These samples are a small uploader CLIs for Azure blob storage. Essentially, you need to set a `TYPORA_IMAGE_UPLOAD_AZURE_CONNECTION` environment variable, and ensure you have a container named `typoraimages`. 
 
+![Short demo showing an image paste, followed by an upload](https://user-images.githubusercontent.com/795162/118874957-c6f98a00-b8eb-11eb-9fd2-246b8ed0357c.gif)
+
 ## Setup
 
 Set the `TYPORA_IMAGE_UPLOAD_AZURE_CONNECTION` environment variable to look like this:
