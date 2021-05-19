@@ -1,11 +1,12 @@
 [package]
-name = "azure_blob"
+name = "typora_uploader_azure_blob"
+authors = ["Dr. Christian Geuer-Pollmann <chgeuer@microsoft.com>"]
 version = "0.1.0"
 edition = "2018"
 
 [dependencies]
-azure_core = { git = "https://github.com/Azure/azure-sdk-for-rust" }
-azure_storage = { git = "https://github.com/Azure/azure-sdk-for-rust" }
+azure_core = { git = "https://github.com/Azure/azure-sdk-for-rust", rev = "457bd53107d31f7ccd6cae7128dfaa25f5268679" }
+azure_storage = { git = "https://github.com/Azure/azure-sdk-for-rust", rev = "457bd53107d31f7ccd6cae7128dfaa25f5268679" }
 ring = "0.16"
 base64 = "0.13"
 base32 = "0.4"
@@ -31,7 +32,7 @@ reqwest = "0.11"
 
 [dev-dependencies]
 tokio = { version = "1.0", features = ["macros"] }
-azure_identity = { git = "https://github.com/Azure/azure-sdk-for-rust" }
+azure_identity = { git = "https://github.com/Azure/azure-sdk-for-rust", rev = "457bd53107d31f7ccd6cae7128dfaa25f5268679" }
 
 [features]
 default = ["account", "blob"]
