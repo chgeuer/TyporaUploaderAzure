@@ -1,7 +1,7 @@
 
 # Image uploads from Typora into Azure blob storage, using .NET and Rust
 
-*A .NET Core and a Rust application so let the [Typora](https://typora.io) markdown editor upload images to Azure Blob storage.*
+*A .NET Core and a Rust application to enable the [Typora](https://typora.io) markdown editor upload images to Azure Blob storage.*
 
 I'm a big fan of Typora, as it has a nice WYSIWYG experience. They also support [custom image uploads](https://support.typora.io/Upload-Image/) to a storage backend of your choice. These samples are a small uploader CLIs for Azure blob storage. Essentially, you need to set a `TYPORA_IMAGE_UPLOAD_AZURE_CONNECTION` environment variable, and ensure you have a container named `typoraimages`. 
 
