@@ -1,0 +1,40 @@
+[package]
+name = "azure_blob"
+version = "0.1.0"
+edition = "2018"
+
+[dependencies]
+azure_core = { git = "https://github.com/Azure/azure-sdk-for-rust" }
+azure_storage = { git = "https://github.com/Azure/azure-sdk-for-rust" }
+ring = "0.16"
+base64 = "0.13"
+base32 = "0.4"
+chrono = "0.4"
+http = "0.2"
+futures = "0.3"
+log = "0.4"
+serde = "1.0"
+serde_derive = "1.0"
+serde_json = "1.0"
+serde-xml-rs = "0.4"
+url = "2.2"
+urlencoding = "1.3"
+uuid = { version = "0.8", features = ["v4"] }
+bytes = "1.0"
+md5 = "0.7"
+RustyXML = "0.3"
+thiserror = "1.0"
+once_cell = "1.7"
+tokio = { version = "1.0", features = ["full"] }
+env_logger = "0.8"
+reqwest = "0.11"
+
+[dev-dependencies]
+tokio = { version = "1.0", features = ["macros"] }
+azure_identity = { git = "https://github.com/Azure/azure-sdk-for-rust" }
+
+[features]
+default = ["account", "blob"]
+account = []
+blob = []
+data_lake = []
