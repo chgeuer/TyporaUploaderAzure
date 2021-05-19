@@ -44,3 +44,6 @@ In this URL, you can identify
 - `image-20210519212457278` is the typora-chosen file name for a bitmap image paste
 - `A4PXCWXMWQS25AD1WE2FBXF2HC` is the base32-encoded MD5 hash of the file. I used base32 instead base64 so I could include the full hash in the URL. 
 
+## Feedback and warning
+
+The .NET/C# code certainly isn't something to be ashamed for. The Rust code on the other hand certainly is shitty as hell; I'm barely understanding how to properly fight with the borrow checker, and I certainly don't do idiomatic things, but beginner mistakes in the Rust code. If you are willing to provide feedback, use my github handle `chgeuer` to hit me on [Twitter](https://twitter.com/chgeuer/), or via mail on `microsoft.com`, or open an issue or a PR 😍. 
