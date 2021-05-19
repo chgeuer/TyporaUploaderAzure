@@ -21,8 +21,8 @@ fn get_mimetype_from_filename(filename: &str) -> &str {
     }
 }
 
-// "C:\github\chgeuer\TyporaUploaderAzure\bin\Debug\netcoreapp3.1\TyporaUploaderAzure.exe"
-// "C:\Users\chgeuer\src\azure_blob\target\debug\azure_blob.exe"
+// "C:\github\chgeuer\TyporaUploaderAzure\dotnet\bin\Debug\netcoreapp3.1\TyporaUploaderAzure.exe"
+// "C:\github\chgeuer\TyporaUploaderAzure\rust\target\debug\typora_uploader_azure_blob.exe"
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
     let connection_string = std::env::var("TYPORA_IMAGE_UPLOAD_AZURE_CONNECTION")
@@ -58,25 +58,32 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
 
     let filenames: Vec<String> = env::args().skip(1).collect();
     for filename in filenames {
+        // Directories which contain characters like '#' contain a %23 in the path when Typora calls us.
+        // Therefore, we url-decode the path...
         let filename = urlencoding::decode(&filename).unwrap();
 
+        // Don't like reading everything into memory, on the other hand we're talking JPEG/PNG screenshots,
+        // so should be OK
         let mut f = File::open(&filename).await?;
         let mut data = Vec::new();
         f.read_to_end(&mut data).await?;
 
         let hash = md5::compute(&data[..]);
 
-        let base32val = base32::encode(base32::Alphabet::Crockford, &hash[..]);
-
-        let n = Path::new(&filename)
+        let filename_without_extension = Path::new(&filename)
             .file_stem()
             .and_then(OsStr::to_str)
             .unwrap();
-        let e = Path::new(&filename)
+        let file_extension_without_dot = Path::new(&filename)
             .extension()
             .and_then(OsStr::to_str)
             .unwrap_or("");
-        let blob_name = format!("{}/{}----{}.{}", prefix, n, base32val, e);
+
+        let base32_encoded_md5 = base32::encode(base32::Alphabet::Crockford, &hash[..]);
+        let blob_name = format!(
+            "{}/{}----{}.{}",
+            prefix, filename_without_extension, base32_encoded_md5, file_extension_without_dot
+        );
         let mime_type = get_mimetype_from_filename(&filename);
 
         let blob = container.as_blob_client(&blob_name);
@@ -97,6 +104,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
             url.path_segments_mut().unwrap().push(&s);
         }
 
+        // need to tell Typora where the files have been uploaded.
         println!("{}", url.to_string());
     }
 
