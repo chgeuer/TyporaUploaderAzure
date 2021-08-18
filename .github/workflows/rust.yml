@@ -16,7 +16,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: icepuma/rust-action@master
         with:
-          args: cargo fmt -- --check && cargo clippy -- -Dwarnings && cargo test
+          args: cargo build
     - name: Build
       working-directory: ./rust
       run: cargo build --verbose
