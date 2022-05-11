@@ -17,6 +17,7 @@ fn get_mimetype_from_filename(filename: &str) -> &str {
         Some("jpg") => "image/jpeg",
         Some("jpeg") => "image/jpeg",
         Some("png") => "image/png",
+        Some("svg") => "image/svg+xml",
         _ => "application/octet-stream",
     }
 }
@@ -100,12 +101,12 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
         ))
         .unwrap();
         url.path_segments_mut().unwrap().push(&container_name);
-        for s in blob_name.split("/") {
-            url.path_segments_mut().unwrap().push(&s);
+        for s in blob_name.split('/') {
+            url.path_segments_mut().unwrap().push(s);
         }
 
         // need to tell Typora where the files have been uploaded.
-        println!("{}", url.to_string());
+        println!("{}", url);
     }
 
     Ok(())
