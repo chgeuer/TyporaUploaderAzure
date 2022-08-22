@@ -12,12 +12,11 @@ use std::sync::Arc;
 use tokio::fs::File;
 use tokio::io::AsyncReadExt;
 use url::Url;
-
 const CONNECTIONSTR_ENVVAR_NAME: &str = "TYPORA_IMAGE_UPLOAD_AZURE_CONNECTION";
 const CONTAINER_ENVVAR_NAME: &str = "TYPORA_IMAGE_UPLOAD_AZURE_CONTAINER";
 const UPLOAD_VANITY_HOSTNAME: &str = "TYPORA_IMAGE_UPLOAD_VANITY_HOST";
 
-fn get_mimetype_from_extension(extension: &str) -> &str {
+fn get_mimetype_from_extention(extension: &str) -> &str {
     // could also use mime_guess = "2.0.3"
     match extension {
         "jpg" => "image/jpeg",
@@ -126,7 +125,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
                     .to_string();
                 let extension = path.extension().and_then(OsStr::to_str).unwrap();
 
-                let mime_type = get_mimetype_from_extension(extension).to_string();
+                let mime_type = get_mimetype_from_extention(extension).to_string();
 
                 let mut f = File::open(&filename).await?;
                 let mut bytes = Vec::new();
