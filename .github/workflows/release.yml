@@ -21,8 +21,8 @@ jobs:
     steps:
       - uses: actions/checkout@master
       - name: Compile and release
-        working-directory: ./rust
         uses: rust-build/rust-build.action@v1.3.2
+        working-directory: ./rust
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
