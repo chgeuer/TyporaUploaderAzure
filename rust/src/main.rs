@@ -61,12 +61,11 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
         Ok(_) => {}
         Err(_) => {
             // azure_storage::azure_core::errors::UnexpectedHTTPResult is in private crate
-            let res = container
+            container
                 .create()
                 .public_access(PublicAccess::Blob)
                 .execute()
                 .await?;
-            println!("{:?}", res);
         }
     }
 
@@ -145,7 +144,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
 
         match upload_data_option {
             None => {
-                println!("");
+                println!();
             }
             Some(UploadData {
                 blob_base_name,
