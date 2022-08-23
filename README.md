@@ -7,6 +7,10 @@ I'm a big fan of Typora, as it has a nice WYSIWYG experience. They also support 
 
 ![Short demo showing an image paste, followed by an upload](https://user-images.githubusercontent.com/795162/118874957-c6f98a00-b8eb-11eb-9fd2-246b8ed0357c.gif)
 
+
+![Short demo showing an image paste, followed by an upload](https://user-images.githubusercontent.com/795162/186091123-b57dd152-5c7b-4502-8c3c-0cab8c07a4f3.mp4)
+
+
 ## Setup
 
 Set the `TYPORA_IMAGE_UPLOAD_AZURE_CONNECTION` environment variable to look like this:
