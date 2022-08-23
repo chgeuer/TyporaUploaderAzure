@@ -34,6 +34,7 @@ struct UploadData {
     blob_base_name: String,
     extension: String,
     mime_type: String,
+    source: String,
     bytes: Vec<u8>,
 }
 
@@ -90,7 +91,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
                 let extension = Path::new(&filename)
                     .extension()
                     .and_then(OsStr::to_str)
-                    .unwrap()
+                    .unwrap_or_default()
                     .to_string();
 
                 let content: Response = reqwest::get(url.clone()).await?;
@@ -110,6 +111,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
                         blob_base_name,
                         extension,
                         mime_type,
+                        source: url.to_string(),
                         bytes,
                     })
                 } else {
@@ -136,6 +138,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
                     blob_base_name,
                     extension: extension.to_string(),
                     mime_type,
+                    source: filename,
                     bytes,
                 })
             };
@@ -148,6 +151,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
                 blob_base_name,
                 extension,
                 mime_type,
+                source,
                 bytes,
             }) => {
                 let hash = md5::compute(&bytes[..]);
@@ -160,10 +164,16 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
                     format!("{date}/{blob_base_name}----{base32_encoded_md5}.{extension}")
                 };
 
+                let mut metadata = Metadata::new();
+                metadata
+                    .as_mut()
+                    .insert("source".into(), source.into());
+
                 container
                     .as_blob_client(&blob_name)
                     .put_block_blob(bytes.clone())
                     .content_type(&mime_type[..])
+                    .metadata(&metadata)
                     //.content_disposition(&format!("attachment; filename={}.{}", filename_without_extension, file_extension_without_dot)[..])
                     //.content_language("en-us")
                     .hash(&hash.into())
