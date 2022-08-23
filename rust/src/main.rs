@@ -165,9 +165,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
                 };
 
                 let mut metadata = Metadata::new();
-                metadata
-                    .as_mut()
-                    .insert("source".into(), source.into());
+                metadata.as_mut().insert("source".into(), source.into());
 
                 container
                     .as_blob_client(&blob_name)
