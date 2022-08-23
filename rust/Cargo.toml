@@ -4,6 +4,7 @@ authors = ["Dr. Christian Geuer-Pollmann <chgeuer@microsoft.com>"]
 version = "0.1.1"
 edition = "2018"
 
+
 [dependencies]
 azure_core = { git = "https://github.com/Azure/azure-sdk-for-rust", rev = "457bd53107d31f7ccd6cae7128dfaa25f5268679" }
 azure_storage = { git = "https://github.com/Azure/azure-sdk-for-rust", rev = "457bd53107d31f7ccd6cae7128dfaa25f5268679" }
