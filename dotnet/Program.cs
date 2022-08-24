@@ -9,7 +9,6 @@
     using System.Web;
     using Azure.Storage.Blobs.Models;
     using SimpleBase;
-
     class Program
     {
         // https://support.typora.io/Upload-Image/
@@ -17,7 +16,9 @@
         {
             var connectionString = Environment.GetEnvironmentVariable("TYPORA_IMAGE_UPLOAD_AZURE_CONNECTION");
             var serviceClient = new Azure.Storage.Blobs.BlobServiceClient(connectionString: connectionString);
-            var containerClient = serviceClient.GetBlobContainerClient(blobContainerName: "typoraimages");
+            var containerClient = serviceClient.GetBlobContainerClient(blobContainerName: Environment.GetEnvironmentVariable("TYPORA_IMAGE_UPLOAD_AZURE_CONTAINER"));
+            var vanityHostName = Environment.GetEnvironmentVariable("TYPORA_IMAGE_UPLOAD_VANITY_HOST");
+
             // await containerClient.CreateIfNotExistsAsync(Azure.Storage.Blobs.Models.PublicAccessType.Blob);
 
             var prefix = DateTime.Now.ToString("yyyy/MM/dd/HH/mm");
@@ -38,9 +39,12 @@
 
                 string mimeType(string extension) => extension switch
                 {
-                    ".png" => "image/png",
-                    ".jpeg" => "image/jpeg",
                     ".jpg" => "image/jpeg",
+                    ".jpeg" => "image/jpeg",
+                    ".png" => "image/png",
+                    ".svg" => "image/svg+xml",
+                    ".mp4" => "video/mp4",
+                    ".pdf" => "application/pdf",
                     _ => "application/octet-stream",
                 };
 
@@ -59,7 +63,9 @@
                     await blobClient.SetHttpHeadersAsync(headers);
                 }
 
-                return blobClient.Uri.AbsoluteUri;
+                return string.IsNullOrEmpty(vanityHostName)
+                    ? blobClient.Uri.AbsoluteUri
+                    : new UriBuilder (uri: blobClient.Uri.AbsoluteUri) { Host = vanityHostName }.Uri.AbsoluteUri;
             });
 
             await Task.WhenAll(tasks);
