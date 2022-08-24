@@ -1,3 +1,2 @@
-/rust/Cargo.lock
 /.vs/TyporaUploaderAzure/v16/*.suo
-/url_test/target
+/target
