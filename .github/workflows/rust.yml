@@ -20,8 +20,6 @@ jobs:
       with:
         args: cd rust && cargo fmt -- --check && cargo clippy -- -Dwarnings && cargo test
     - name: Build
-      working-directory: ./rust
       run: cargo build --verbose
     - name: Run tests
-      working-directory: ./rust
       run: cargo test --verbose
