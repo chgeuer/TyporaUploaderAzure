@@ -4,10 +4,6 @@ on:
   workflow_dispatch:
   release:
     types: [created]
-
-defaults:
-  run:
-    working-directory: rust
     
 jobs:
   release:
@@ -25,6 +21,7 @@ jobs:
         uses: rust-build/rust-build.action@v1.3.2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CARGO_TARGET_DIR: ./rust
         with:
           RUSTTARGET: ${{ matrix.target }}
           ARCHIVE_TYPES: ${{ matrix.archive }}
