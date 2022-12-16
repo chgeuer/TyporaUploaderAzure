@@ -26,6 +26,9 @@ fn get_mimetype_from_extension(extension: &str) -> &str {
         "svg" => "image/svg+xml",
         "mp4" => "video/mp4",
         "pdf" => "application/pdf",
+        "gz" => "application/gzip",
+        "zip" => "application/zip",
+        "rar" => "application/vnd.rar",
         _ => "application/octet-stream",
     }
 }
@@ -41,11 +44,11 @@ struct UploadData {
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
     let connection_string = std::env::var(CONNECTIONSTR_ENVVAR_NAME)
-        .expect("Set env variable {CONNECTIONSTR_ENVVAR_NAME} first!");
+        .expect(format!("Set env variable {} first!", CONNECTIONSTR_ENVVAR_NAME).as_str());
 
     // let container_name: String = "typoraimages".to_owned();
     let container_name = std::env::var(CONTAINER_ENVVAR_NAME)
-        .expect("Set env variable {CONTAINER_ENVVAR_NAME} first!");
+        .expect(format!("Set env variable {} first!", CONTAINER_ENVVAR_NAME).as_str());
 
     let cs = azure_storage::ConnectionString::new(&connection_string).unwrap();
 
@@ -70,7 +73,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
     }
 
     // https://docs.rs/chrono/0.4.0/chrono/format/strftime/index.html
-    let date = Utc::now().format("%Y/%m/%d/%H/%M").to_string();
+    let date = Utc::now().format("%Y/%m/%d/%H").to_string(); // "%Y/%m/%d/%H/%M
 
     // https://georgik.rocks/how-to-download-binary-file-in-rust-by-reqwest/
 
@@ -125,7 +128,11 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
                     .and_then(OsStr::to_str)
                     .unwrap()
                     .to_string();
-                let extension = path.extension().and_then(OsStr::to_str).unwrap();
+
+                let extension = match path.extension().and_then(OsStr::to_str) {
+                    None => "",
+                    Some(ext) => ext,
+                };
 
                 let mime_type = get_mimetype_from_extension(extension).to_string();
 
