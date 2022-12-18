@@ -69,7 +69,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
     // https://docs.rs/chrono/0.4.0/chrono/format/strftime/index.html
     let date = Utc::now().format("%Y/%m/%d/%H").to_string(); // "%Y/%m/%d/%H/%M
 
-    let filenames: Vec<String> = env::args().skip(1).collect();
+    let filenames: Vec<String> = env::args().skip(1).collect(); // let filenames: Vec<String> = vec!["compiling.md".to_string()];
     for filename_or_url in filenames {
         let upload_data_option =
             if filename_or_url.starts_with("http://") || filename_or_url.starts_with("https://") {
@@ -176,8 +176,8 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
                     .await?;
 
                 let hostname = match std::env::var(UPLOAD_VANITY_HOSTNAME) {
-                    Ok(h) => format!("http://{}", h),
-                    Err(_) => format!(
+                    Ok(h) if h.len() > 0 => format!("http://{}", h),
+                    _ => format!(
                         "https://{}.blob.core.windows.net",
                         connection_string.account_name.unwrap()
                     ),
