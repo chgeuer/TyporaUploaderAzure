@@ -111,6 +111,52 @@ async fn get_upload_data(filename_or_url: String) -> Option<UploadData> {
     }
 }
 
+async fn upload_data(data: UploadData, date: &String, container_client: &ContainerClient, container_name: &String, connection_string: &ConnectionString<'_>) -> Result<Url, Box<dyn Error>> {
+    let UploadData { blob_base_name, extension, mime_type, source, bytes } = data;
+
+    let hash = md5::compute(&bytes[..]);
+    let base32_encoded_md5: String =
+        base32::encode(base32::Alphabet::Crockford, &hash[..]);
+
+    let blob_name = if extension.is_empty() {
+        format!("{date}/{blob_base_name}----{base32_encoded_md5}")
+    } else {
+        format!("{date}/{blob_base_name}----{base32_encoded_md5}.{extension}")
+    };
+
+    let mut metadata = Metadata::new();
+    metadata.as_mut().insert("source".into(), source.into());
+
+    container_client
+        .blob_client(blob_name.clone())
+        .put_block_blob(bytes.clone())
+        .content_type(mime_type)
+        .metadata(metadata)
+        //.content_disposition(&format!("attachment; filename={}.{}", filename_without_extension, file_extension_without_dot)[..])
+        //.content_language("en-us")
+        .hash(hash)
+        .await?;
+
+    let hostname = match std::env::var(UPLOAD_VANITY_HOSTNAME) {
+        Ok(h) if h.len() > 0 => format!("http://{}", h),
+        _ => format!(
+            "https://{}.blob.core.windows.net",
+            connection_string.account_name.unwrap()
+        ),
+    };
+
+    let mut url: Url = Url::parse(&hostname).unwrap();
+    url.path_segments_mut().unwrap().push(&container_name);
+    for s in blob_name.split('/') {
+        url.path_segments_mut().unwrap().push(s);
+    }
+
+    // need to tell Typora where the files have been uploaded.
+    // println!("{blob_name} : {mime_type} : {len} bytes");
+
+    Ok(url)
+}
+
 #[tokio::main]
 //async fn main() -> azure_core::Result<()> {
 async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
@@ -143,57 +189,12 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
     let filenames: Vec<String> = env::args().skip(1).collect(); // let filenames: Vec<String> = vec!["compiling.md".to_string()];
     for filename_or_url in filenames {
         match get_upload_data(filename_or_url).await {
-            None => {
-                println!();
-            }
-            Some(UploadData {
-                blob_base_name,
-                extension,
-                mime_type,
-                source,
-                bytes,
-            }) => {
-                let hash = md5::compute(&bytes[..]);
-                let base32_encoded_md5: String =
-                    base32::encode(base32::Alphabet::Crockford, &hash[..]);
-
-                let blob_name = if extension.is_empty() {
-                    format!("{date}/{blob_base_name}----{base32_encoded_md5}")
-                } else {
-                    format!("{date}/{blob_base_name}----{base32_encoded_md5}.{extension}")
-                };
-
-                let mut metadata = Metadata::new();
-                metadata.as_mut().insert("source".into(), source.into());
-
-                container_client
-                    .blob_client(blob_name.clone())
-                    .put_block_blob(bytes.clone())
-                    .content_type(mime_type)
-                    .metadata(metadata)
-                    //.content_disposition(&format!("attachment; filename={}.{}", filename_without_extension, file_extension_without_dot)[..])
-                    //.content_language("en-us")
-                    .hash(hash)
-                    .await?;
-
-                let hostname = match std::env::var(UPLOAD_VANITY_HOSTNAME) {
-                    Ok(h) if h.len() > 0 => format!("http://{}", h),
-                    _ => format!(
-                        "https://{}.blob.core.windows.net",
-                        connection_string.account_name.unwrap()
-                    ),
-                };
-
-                let mut url: Url = Url::parse(&hostname).unwrap();
-                url.path_segments_mut().unwrap().push(&container_name);
-                for s in blob_name.split('/') {
-                    url.path_segments_mut().unwrap().push(s);
+            None => { println!(); }
+            Some(ud) => { 
+                match upload_data(ud, &date, &container_client, &container_name, &connection_string).await {
+                    Ok(url) => { println!("{}", url); }
+                    _ => { println!(); }
                 }
-
-                // need to tell Typora where the files have been uploaded.
-                // println!("{blob_name} : {mime_type} : {len} bytes");
-
-                println!("{}", url);
             }
         }
     }
