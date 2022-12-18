@@ -40,6 +40,77 @@ struct UploadData {
     bytes: Vec<u8>,
 }
 
+async fn get_upload_data(filename_or_url: String) -> Option<UploadData> {
+    if filename_or_url.starts_with("http://") || filename_or_url.starts_with("https://") {
+        let url = filename_or_url;
+        let url = Url::parse(&url).unwrap();
+        let filename = url.path().split('/').last().unwrap();
+
+        let blob_base_name = Path::new(&filename)
+            .file_stem()
+            .and_then(OsStr::to_str)
+            .unwrap()
+            .to_string();
+        let extension = Path::new(&filename)
+            .extension()
+            .and_then(OsStr::to_str)
+            .unwrap_or_default()
+            .to_string();
+
+        let content: Response = reqwest::get(url.clone()).await.ok()?;
+        if content.status().is_success() {
+            let mime_type = match content.headers().get(CONTENT_TYPE) {
+                Some(content_type) => match content_type.to_str() {
+                    Ok(mimetype) => mimetype,
+                    _ => "application/binary",
+                },
+                None => "application/binary",
+            }
+            .to_string();
+
+            let bytes = content.bytes().await.ok()?.to_vec();
+
+            Some(UploadData {
+                blob_base_name,
+                extension,
+                mime_type,
+                source: url.to_string(),
+                bytes,
+            })
+        } else {
+            None
+        }
+    } else {
+        let filename = filename_or_url;
+        let path: &Path = Path::new(&filename);
+
+        let blob_base_name = path
+            .file_stem()
+            .and_then(OsStr::to_str)
+            .unwrap()
+            .to_string();
+
+        let extension = match path.extension().and_then(OsStr::to_str) {
+            None => "",
+            Some(ext) => ext,
+        };
+
+        let mime_type = get_mimetype_from_extension(extension).to_string();
+
+        let mut f = File::open(&filename).await.ok()?;
+        let mut bytes = Vec::new();
+        f.read_to_end(&mut bytes).await.ok()?;
+
+        Some(UploadData {
+            blob_base_name,
+            extension: extension.to_string(),
+            mime_type,
+            source: filename,
+            bytes,
+        })
+    }
+}
+
 #[tokio::main]
 //async fn main() -> azure_core::Result<()> {
 async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
@@ -71,77 +142,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
 
     let filenames: Vec<String> = env::args().skip(1).collect(); // let filenames: Vec<String> = vec!["compiling.md".to_string()];
     for filename_or_url in filenames {
-        let upload_data_option =
-            if filename_or_url.starts_with("http://") || filename_or_url.starts_with("https://") {
-                let url = filename_or_url;
-                let url = Url::parse(&url).unwrap();
-                let filename = url.path().split('/').last().unwrap();
-
-                let blob_base_name = Path::new(&filename)
-                    .file_stem()
-                    .and_then(OsStr::to_str)
-                    .unwrap()
-                    .to_string();
-                let extension = Path::new(&filename)
-                    .extension()
-                    .and_then(OsStr::to_str)
-                    .unwrap_or_default()
-                    .to_string();
-
-                let content: Response = reqwest::get(url.clone()).await?;
-                if content.status().is_success() {
-                    let mime_type = match content.headers().get(CONTENT_TYPE) {
-                        Some(content_type) => match content_type.to_str() {
-                            Ok(mimetype) => mimetype,
-                            _ => "application/binary",
-                        },
-                        None => "application/binary",
-                    }
-                    .to_string();
-
-                    let bytes = content.bytes().await?.to_vec();
-
-                    Some(UploadData {
-                        blob_base_name,
-                        extension,
-                        mime_type,
-                        source: url.to_string(),
-                        bytes,
-                    })
-                } else {
-                    None
-                }
-            } else {
-                let filename = filename_or_url;
-                let path: &Path = Path::new(&filename);
-
-                let blob_base_name = path
-                    .file_stem()
-                    .and_then(OsStr::to_str)
-                    .unwrap()
-                    .to_string();
-
-                let extension = match path.extension().and_then(OsStr::to_str) {
-                    None => "",
-                    Some(ext) => ext,
-                };
-
-                let mime_type = get_mimetype_from_extension(extension).to_string();
-
-                let mut f = File::open(&filename).await?;
-                let mut bytes = Vec::new();
-                f.read_to_end(&mut bytes).await?;
-
-                Some(UploadData {
-                    blob_base_name,
-                    extension: extension.to_string(),
-                    mime_type,
-                    source: filename,
-                    bytes,
-                })
-            };
-
-        match upload_data_option {
+        match get_upload_data(filename_or_url).await {
             None => {
                 println!();
             }

@@ -18,7 +18,7 @@ DefaultEndpointsProtocol=https;EndpointSuffix=core.windows.net;AccountName=typor
 Compile the .NET or Rust bits, go to the Typora `Preferences` page, `Image` section, and in the `Image Upload Settings`, select `Image Uploader: Custom Command`, and set the Command to something like 
 
 ```text
-"C:\github\chgeuer\TyporaUploaderAzure\rust\target\debug\typora_uploader_azure_blob.exe"
+"C:\github\chgeuer\TyporaUploaderAzure\rust\target\debug\azure_blob.exe"
 ```
 
 So it looks like this
