@@ -1,6 +1,6 @@
-use azure_core::prelude::*;
-use azure_storage::blob::prelude::*;
-use azure_storage::core::prelude::*;
+use azure_core::request_options::Metadata;
+use azure_storage::ConnectionString;
+use azure_storage_blobs::prelude::*;
 use chrono::Utc;
 use reqwest::header::CONTENT_TYPE;
 use reqwest::Response;
@@ -8,7 +8,6 @@ use std::env;
 use std::error::Error;
 use std::ffi::OsStr;
 use std::path::Path;
-use std::sync::Arc;
 use tokio::fs::File;
 use tokio::io::AsyncReadExt;
 use url::Url;
@@ -42,40 +41,33 @@ struct UploadData {
 }
 
 #[tokio::main]
+//async fn main() -> azure_core::Result<()> {
 async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
-    let connection_string = std::env::var(CONNECTIONSTR_ENVVAR_NAME)
-        .expect(format!("Set env variable {} first!", CONNECTIONSTR_ENVVAR_NAME).as_str());
+    let connection_string = std::env::var(CONNECTIONSTR_ENVVAR_NAME).expect(&format!(
+        "Set env variable {} first!",
+        CONNECTIONSTR_ENVVAR_NAME
+    ));
+    let connection_string = ConnectionString::new(&connection_string).unwrap();
+    let storage_credentials = connection_string.storage_credentials().unwrap();
 
-    // let container_name: String = "typoraimages".to_owned();
-    let container_name = std::env::var(CONTAINER_ENVVAR_NAME)
-        .expect(format!("Set env variable {} first!", CONTAINER_ENVVAR_NAME).as_str());
-
-    let cs = azure_storage::ConnectionString::new(&connection_string).unwrap();
-
-    let http_client: Arc<Box<dyn HttpClient>> = Arc::new(Box::new(reqwest::Client::new()));
-
-    let storage_account =
-        StorageAccountClient::new_connection_string(http_client.clone(), &connection_string)?
-            .as_storage_client();
-
-    let container: Arc<ContainerClient> = storage_account.as_container_client(&container_name);
-
-    match container.get_properties().execute().await {
-        Ok(_) => {}
-        Err(_) => {
-            // azure_storage::azure_core::errors::UnexpectedHTTPResult is in private crate
-            container
-                .create()
-                .public_access(PublicAccess::Blob)
-                .execute()
-                .await?;
-        }
+    let container_name = std::env::var(CONTAINER_ENVVAR_NAME).expect(&format!(
+        "Set env variable {} first!",
+        CONTAINER_ENVVAR_NAME
+    ));
+    let client_builder =
+        ClientBuilder::new(connection_string.account_name.unwrap(), storage_credentials);
+    let container_client = client_builder
+        .clone()
+        .container_client(container_name.clone());
+    if !container_client.exists().await? {
+        container_client
+            .create()
+            .public_access(PublicAccess::Blob)
+            .await?;
     }
 
     // https://docs.rs/chrono/0.4.0/chrono/format/strftime/index.html
     let date = Utc::now().format("%Y/%m/%d/%H").to_string(); // "%Y/%m/%d/%H/%M
-
-    // https://georgik.rocks/how-to-download-binary-file-in-rust-by-reqwest/
 
     let filenames: Vec<String> = env::args().skip(1).collect();
     for filename_or_url in filenames {
@@ -173,20 +165,22 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
                 let mut metadata = Metadata::new();
                 metadata.as_mut().insert("source".into(), source.into());
 
-                container
-                    .as_blob_client(&blob_name)
+                container_client
+                    .blob_client(blob_name.clone())
                     .put_block_blob(bytes.clone())
-                    .content_type(&mime_type[..])
-                    .metadata(&metadata)
+                    .content_type(mime_type)
+                    .metadata(metadata)
                     //.content_disposition(&format!("attachment; filename={}.{}", filename_without_extension, file_extension_without_dot)[..])
                     //.content_language("en-us")
-                    .hash(&hash.into())
-                    .execute()
+                    .hash(hash)
                     .await?;
 
                 let hostname = match std::env::var(UPLOAD_VANITY_HOSTNAME) {
                     Ok(h) => format!("http://{}", h),
-                    Err(_) => format!("https://{}.blob.core.windows.net", cs.account_name.unwrap()),
+                    Err(_) => format!(
+                        "https://{}.blob.core.windows.net",
+                        connection_string.account_name.unwrap()
+                    ),
                 };
 
                 let mut url: Url = Url::parse(&hostname).unwrap();
@@ -202,5 +196,6 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
             }
         }
     }
+
     Ok(())
 }
